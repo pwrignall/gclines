@@ -70,6 +70,8 @@ def create_route_points():
                 item["to_lon"],
                 item["to_lat"],
                 del_s=1e5,
+                initial_idx=0,
+                terminus_idx=0,
             )
             for lon, lat in zip(r.lons, r.lats):
                 writer.writerow([route, "{:.5f}".format(lat), "{:.5f}".format(lon)])
