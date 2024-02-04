@@ -10,7 +10,7 @@ logger.setLevel(logging.INFO)
 
 def create_airport_dict():
     airports = dict()
-    with open("airports.csv") as csvfile:
+    with open("airports.csv", encoding="utf8") as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             if row["iata_code"] != "":
@@ -27,7 +27,7 @@ def create_airport_dict():
 def output_airport_points(airport_dict: dict):
     airport_list = list()
     routes = dict()
-    with open("routes.csv") as csvfile:
+    with open("routes.csv", encoding="utf8") as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             airport_from = row["from"]
@@ -41,7 +41,7 @@ def output_airport_points(airport_dict: dict):
                 "to_lon": float(airport_dict[airport_to]["lon"]),
             }
 
-    with open("airport_points.csv", mode="w") as csv_file:
+    with open("airport_points.csv", mode="w", encoding="utf8", newline="") as csv_file:
         fieldnames = ["iata_code", "name", "loc_name", "latitude", "longitude"]
         writer = csv.writer(csv_file)
         writer.writerow(fieldnames)
@@ -51,13 +51,13 @@ def output_airport_points(airport_dict: dict):
     return routes
 
 
-def create_route_lines():
+def create_route_points():
     airports = create_airport_dict()
     routes = output_airport_points(airport_dict=airports)
     # https://geographiclib.sourceforge.io/Python/doc/examples.html#computing-waypoints
     geod = Geodesic.WGS84
 
-    with open("route_points.csv", mode="w") as csv_file:
+    with open("route_points.csv", mode="w", encoding="utf8", newline="") as csv_file:
         fieldnames = ["route", "latitude", "longitude"]
         writer = csv.writer(csv_file)
         writer.writerow(fieldnames)
@@ -86,4 +86,4 @@ def create_route_lines():
 
 
 if __name__ == "__main__":
-    create_route_lines()
+    create_route_points()
