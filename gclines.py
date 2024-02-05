@@ -1,11 +1,10 @@
 import csv
-from geographiclib.geodesic import Geodesic
-import math
 import logging
+from pyproj import Geod
 
 logging.basicConfig()
 logger = logging.getLogger("create_route_points")
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 
 def determine_route_direction(geodesic):
@@ -75,8 +74,6 @@ def output_airport_points(airport_dict: dict):
 def create_route_points(split_longitude=180):
     airports = create_airport_dict()
     routes = output_airport_points(airport_dict=airports)
-    # https://geographiclib.sourceforge.io/Python/doc/examples.html#computing-waypoints
-    geod = Geodesic.WGS84
 
     with open("route_points.csv", mode="w", encoding="utf8", newline="") as csv_file:
         fieldnames = ["route", "latitude", "longitude"]
@@ -85,6 +82,8 @@ def create_route_points(split_longitude=180):
 
         for route in routes:
             logger.info(f"Calculating {route}")
+            # https://pyproj4.github.io/pyproj/stable/api/geod.html#pyproj.Geod.inv_intermediate
+            g = Geod(ellps="WGS84")
             item = routes[route]
             logger.debug(item)
             l = geod.InverseLine(item["from_lat"], item["from_lon"], item["to_lat"], item["to_lon"],
