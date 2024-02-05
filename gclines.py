@@ -13,15 +13,15 @@ def determine_route_direction(geodesic):
     return "west" if g["azi1"] < 0 else "east"
 
 
-def check_longitude_value_for_split(route, lon, direction, split_lon):
+def check_longitude_value_for_split(route, lon, direction, split_lon, prev_lon):
     if direction == "east":
-        if lon > split_lon:
+        if lon > split_lon or (lon * prev_lon < 0 and abs(lon) + abs(prev_lon) > 350):
             return route + "_1", False
         else:
             return route, True
     elif direction == "west":
         split_lon = split_lon if split_lon != 180 else -180
-        if lon < split_lon:
+        if lon < split_lon or (lon * prev_lon < 0 and abs(lon) + abs(prev_lon) > 350):
             return route + "_1", False
         else:
             return route, True
@@ -95,13 +95,16 @@ def create_route_points(split_longitude=180):
             direction = determine_route_direction(l)
             logger.debug(direction)
             check_for_split = True
+            prev_lon = item["from_lon"]
             for i in range(n + 1):
                 a = da * i
-                g = l.ArcPosition(a, Geodesic.LATITUDE | Geodesic.LONGITUDE | Geodesic.LONG_UNROLL)
+                g = l.ArcPosition(a, Geodesic.LATITUDE | Geodesic.LONGITUDE)
                 if check_for_split:
                     route, check_for_split = check_longitude_value_for_split(route, g["lon2"], direction,
-                                                                             split_longitude)
-                writer.writerow([route, "{:.5f}".format(g["lat2"]), "{:.5f}".format(g["lon2"])])
+                                                                             split_longitude, prev_lon)
+                writer.writerow([route, "{:.5f}".format(
+                    g["lat2"]), "{:.5f}".format(g["lon2"])])
+                prev_lon = g["lon2"]
 
 
 if __name__ == "__main__":
