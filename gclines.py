@@ -1,10 +1,11 @@
 import csv
 import logging
-from pyproj import Geod
+from geographiclib.geodesic import Geodesic
+import math
 
 logging.basicConfig()
 logger = logging.getLogger("create_route_points")
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 
 def determine_route_direction(geodesic):
@@ -38,7 +39,7 @@ def create_airport_dict():
                     "name": row["name"],
                     "loc_name": row["municipality"],
                     "lat": row["latitude_deg"],
-                    "lon": row["longitude_deg"],
+                    "lon": row["longitude_deg"]
                 }
                 airports[row["iata_code"]] = attributes
     return airports
@@ -50,16 +51,20 @@ def output_airport_points(airport_dict: dict):
     with open("routes.csv", encoding="utf8") as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
-            airport_from = row["from"]
-            airport_to = row["to"]
-            airport_list.append(airport_from)
-            airport_list.append(airport_to)
-            routes[airport_from + "-" + airport_to] = {
-                "from_lat": float(airport_dict[airport_from]["lat"]),
-                "from_lon": float(airport_dict[airport_from]["lon"]),
-                "to_lat": float(airport_dict[airport_to]["lat"]),
-                "to_lon": float(airport_dict[airport_to]["lon"]),
-            }
+            try:
+                airport_from = row["from"]
+                airport_to = row["to"]
+                routes[airport_from + "-" + airport_to] = {
+                    "from_lat": float(airport_dict[airport_from]["lat"]),
+                    "from_lon": float(airport_dict[airport_from]["lon"]),
+                    "to_lat": float(airport_dict[airport_to]["lat"]),
+                    "to_lon": float(airport_dict[airport_to]["lon"])
+                }
+                airport_list.append(airport_from)
+                airport_list.append(airport_to)
+            except ValueError:
+                logger.warning(
+                    f"Could not process route {airport_from} to {airport_to}")
 
     with open("airport_points.csv", mode="w", encoding="utf8", newline="") as csv_file:
         fieldnames = ["iata_code", "name", "loc_name", "latitude", "longitude"]
@@ -82,12 +87,12 @@ def create_route_points(split_longitude=180):
 
         for route in routes:
             logger.info(f"Calculating {route}")
-            # https://pyproj4.github.io/pyproj/stable/api/geod.html#pyproj.Geod.inv_intermediate
-            g = Geod(ellps="WGS84")
+            # https://geographiclib.sourceforge.io/Python/doc/examples.html#computing-waypoints
+            geod = Geodesic.WGS84
             item = routes[route]
             logger.debug(item)
-            l = geod.InverseLine(item["from_lat"], item["from_lon"], item["to_lat"], item["to_lon"],
-                                 Geodesic.LATITUDE | Geodesic.LONGITUDE, )
+            l = geod.InverseLine(item["from_lat"], item["from_lon"], item["to_lat"],
+                                 item["to_lon"], Geodesic.LATITUDE | Geodesic.LONGITUDE)
             da = 1
             n = int(math.ceil(l.a13 / da))
             da = l.a13 / n
@@ -99,8 +104,8 @@ def create_route_points(split_longitude=180):
                 a = da * i
                 g = l.ArcPosition(a, Geodesic.LATITUDE | Geodesic.LONGITUDE)
                 if check_for_split:
-                    route, check_for_split = check_longitude_value_for_split(route, g["lon2"], direction,
-                                                                             split_longitude, prev_lon)
+                    route, check_for_split = check_longitude_value_for_split(
+                        route, g["lon2"], direction, split_longitude, prev_lon)
                 writer.writerow([route, "{:.5f}".format(
                     g["lat2"]), "{:.5f}".format(g["lon2"])])
                 prev_lon = g["lon2"]
