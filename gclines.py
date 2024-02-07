@@ -62,7 +62,7 @@ def output_airport_points(airport_dict: dict):
                 }
                 airport_list.append(airport_from)
                 airport_list.append(airport_to)
-            except ValueError:
+            except KeyError:
                 logger.warning(
                     f"Could not process route {airport_from} to {airport_to}")
 
