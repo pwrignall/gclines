@@ -1,6 +1,12 @@
 # gclines
 
-Basic script for taking an input of airport pairs and outputting a CSV of those airport pairs and a series of points connecting them, representing great circles.
+Basic script for taking an input of airport pairs and outputting those airport pairs and a series of points connecting them, representing great circles.
+
+## Set up
+
+1. Clone this repository
+
+2. Install required packages with `pip install -r requirements.txt`
 
 ## Instructions
 
@@ -17,11 +23,23 @@ Basic script for taking an input of airport pairs and outputting a CSV of those 
     CGK,KUL
     ```
 
-3. Run the script. Two output files should be generated:
+3. Run the script using e.g. `python gclines.py`. Four output files should get generated.
 
-    a. `airport_points.csv`: a distinct list of the airports from `routes.csv` containing five columns. `iata_code`, `name`, `loc_name` (the 'municipality' column from OurAirports), `latitude`, `longitude`.
+    Two CSVs:
 
-    b. `route_points.csv`: a comma-separated file containing three columns. `route`, an airport pair route label. `latitude` and `longitude`, decimal columns corresponding to the series of great circle points.
+    a. `airport_points.csv`: a comma-separated file containing a distinct list of the airports from `routes.csv` with
+    five columns. `iata_code`, `name`, `loc_name` (the 'municipality' column from OurAirports), `latitude`, `longitude`.
+
+    b. `route_points.csv`: a comma-separated file containing three columns. `route`, an airport pair route label.
+    `latitude` and `longitude`, decimal columns corresponding to the series of great circle points.
+
+    And two GeoJSONs:
+
+    c. `airport_points.geojson`: a GeoJSON format file containing a distinct list of the airports from `routes.csv` as
+    a FeatureCollection. 
+
+    d. `airport_lines.geojson`: a GeoJSON format file containing the route lines as a FeatureCollection.
+
 
 ### Disclaimer
 
